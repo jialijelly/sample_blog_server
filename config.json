@@ -2,5 +2,13 @@
     "server": {
         "host": "0.0.0.0",
         "port": 8080
+    },
+    "db": {
+        "type": "mysql",
+        "host": "mysql",
+        "port": 3306,
+        "name": "blog",
+        "user": "blog",
+        "password": "blog"
     }
 }

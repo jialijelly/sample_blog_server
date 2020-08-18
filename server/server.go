@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/jialijelly/sample_blog_server/db"
 )
 
 type Server struct {
@@ -40,6 +41,8 @@ func requestLoggingMiddleware(next http.Handler) http.Handler {
 
 func (s *Server) registerRoutes() {
 	s.router.Methods(http.MethodPost).Name("CreateArticle").Path("/articles").HandlerFunc(s.handler.CreateArticle)
+	s.router.Methods(http.MethodGet).Name("ListArticles").Path("/articles").HandlerFunc(s.handler.ListArticles)
+	s.router.Methods(http.MethodGet).Name("GetArticle").Path("/articles/{article_id}").HandlerFunc(s.handler.GetArticle)
 	s.router.Use(requestLoggingMiddleware)
 	log.Printf("Serving the following APIs:")
 	s.router.Walk(
@@ -57,8 +60,21 @@ func (s *Server) Run() {
 }
 
 func NewServer() *Server {
+	var database db.DB
+	var err error
+	switch DefaultConfiguration.DB.Type {
+	case "mysql":
+		database, err = db.NewSQLServer(DefaultConfiguration.DB)
+	default:
+		log.Fatalf("Unsupported database type = %v", DefaultConfiguration.DB.Type)
+		return nil
+	}
+	if err != nil {
+		log.Fatalf("Failed to setup database = %v", err)
+		return nil
+	}
 	server := &Server{
-		handler: NewHandler(),
+		handler: NewHandler(database),
 		router:  mux.NewRouter(),
 	}
 	server.registerRoutes()

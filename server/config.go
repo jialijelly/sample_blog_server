@@ -8,10 +8,20 @@ import (
 	"github.com/jialijelly/sample_blog_server/models"
 )
 
+const (
+	// Database types:
+	mysql = "mysql"
+)
+
 var DefaultConfiguration = models.Configuration{
 	Server: models.ServerConfig{
-		Host: "",
+		Host: "localhost",
 		Port: 8080,
+	},
+	DB: models.DBConfig{
+		Type: mysql,
+		Host: "localhost",
+		Port: 3306,
 	},
 }
 
