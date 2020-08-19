@@ -1,0 +1,198 @@
+#%RAML 1.0
+title: Sample blog server
+version: v1
+protocols: [ HTTP ]
+
+types:
+  Article:
+    type: object
+    description: Details of an article.
+    properties:
+      id:
+        type: string
+        description: Unique identifier of an article.
+      title:
+        type: string
+        description: Title of an article.
+      content:
+        type: string
+        description: Content of an article.
+      author:
+        type: string
+        description: Author of an article.
+
+  ArticleRequest:
+    type: object
+    description: Details of an article.
+    properties:
+      title:
+        type: string
+        description: Title of an article.
+      content:
+        type: string
+        description: Content of an article.
+      author:
+        type: string
+        description: Author of an article.
+
+  Response:
+    type: object
+    description: Generic request response.
+    properties:
+      status:
+        type: int
+        description: HTTP status code.
+      message:
+        type: string
+        description: Request status description.
+      data?:
+        type: Article | Article[] | nil
+        description: Request result.
+
+traits:
+  hasBadRequest:
+    responses:
+      400:
+        description: Syntax errors by user in request.
+        body:
+          application/json:
+            type: Response
+            examples:
+              missing-title: |
+                {
+                  "status": 400,
+                  "message": "Missing required field 'title' in request body.",
+                  "data": null
+                }
+              missing-content: |
+                {
+                  "status": 400,
+                  "message": "Missing required field 'content' in request body.",
+                  "data": null
+                }
+              missing-author: |
+                {
+                  "status": 400,
+                  "message": "Missing required field 'author' in request body.",
+                  "data": null
+                }
+
+  hasDatabaseError:
+    responses:
+      500:
+        description: Error in database.
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 500,
+                "message": "Database error.",
+                "data": null
+              }
+
+  hasReadingRequestError:
+    responses:
+      500:
+        description: Error in reading request body.
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 500,
+                "message": "Failed to read request body.",
+                "data": null
+              }
+
+/articles:
+  get:
+    displayName: ListArticles
+    description: List all articles from database.
+    is:
+      - hasDatabaseError
+    responses:
+      200:
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 200,
+                "message": "Success",
+                "data": [
+                  {
+                    "id": "24a61fd9-2dc7-40b9-9f62-749b87597c7e",
+                    "title": "Sample title 2",
+                    "content": "Sample content 2",
+                    "author": "Sample author 2"
+                  },
+                  {
+                    "id": "9257cc55-0e3e-4055-8a18-0400446ed9d9",
+                    "title": "Sample title",
+                    "content": "Sample content",
+                    "author": "Sample author"
+                  }
+                ]
+              }
+  post:
+    displayName: CreateArticles
+    description: Create new article.
+    is:
+      - hasBadRequest
+      - hasReadingRequestError
+      - hasDatabaseError
+    body:
+      application/json:
+        type: ArticleRequest
+        example: |
+          {
+            "title": "Sample title",
+            "content": "Sample content",
+            "author": "Sample author"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 201,
+                "message": "Success",
+                "data": {
+                  "id": "0d506c95-f301-4022-b89d-011c70846103"
+                }
+              }
+
+  /{article_id}:
+    displayName: ListArticles
+    description: List all articles from database.
+    is:
+      - hasDatabaseError
+    responses:
+      200:
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 200,
+                "message": "Success",
+                "data": {
+                  "id": "9257cc55-0e3e-4055-8a18-0400446ed9d9",
+                  "title": "Sample title",
+                  "content": "Sample content",
+                  "author": "Sample author"
+                }
+              }
+      404:
+        body:
+          application/json:
+            type: Response
+            example: |
+              {
+                "status": 404,
+                "message": "Article with id 8257cc55-0e3e-4055-8a18-0400446ed9d9 not found.",
+                "data": null
+              }
